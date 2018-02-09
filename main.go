@@ -3,6 +3,7 @@ package main
 import (
 	"net"
 	"fmt"
+	"encoding/json"
 )
 
 func main() {
@@ -15,24 +16,38 @@ func main() {
 		panic(err)
 	}
 
+	ch := make(chan []byte)
+	go store(ch)
+
 	for {
-		display(conn)
+		data, err := read(conn)
+		if err == nil {
+			ch <- data
+		}
 	}
 
 	conn.Close()
 }
 
+func read(conn *net.UDPConn) ([]byte, error) {
+	buf := make([]byte, 65535)
+	length, err := conn.Read(buf)
 
-func display(conn *net.UDPConn) {
-
-	var buf [2048]byte
-	n, err := conn.Read(buf[0:])
 	if err != nil {
-		fmt.Println("Error Reading")
-		return
+		return nil, err
 	} else {
-		fmt.Println(string(buf[0:n]))
-		fmt.Println("Package Done")
+		return buf[0:length], nil
 	}
+}
 
+func store(ch chan []byte) {
+	for {
+		var r = &LogRecord{}
+		data := <-ch
+		err := json.Unmarshal(data, r)
+		if err != nil {
+			fmt.Println(err)
+		}
+		fmt.Println(r.SimHash())
+	}
 }
