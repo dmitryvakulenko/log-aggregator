@@ -2,8 +2,11 @@ package main
 
 import (
 	"net"
-	"fmt"
+	"log-aggregator/database"
+	//"log-aggregator/simhash"
+	"log-aggregator/categorizer"
 	"encoding/json"
+	"fmt"
 )
 
 func main() {
@@ -12,12 +15,20 @@ func main() {
 		panic(err)
 	}
 	conn, err := net.ListenUDP("udp", udpAddr)
+	defer conn.Close()
+
 	if err != nil {
 		panic(err)
 	}
 
+	repo := database.Repository{}
+	repo.Connect()
+	defer repo.Disconnect()
+
+	cat := categorizer.Categorizer{Storage: &repo}
+
 	ch := make(chan []byte)
-	go store(ch)
+	go store(ch, cat)
 
 	for {
 		data, err := read(conn)
@@ -25,8 +36,6 @@ func main() {
 			ch <- data
 		}
 	}
-
-	conn.Close()
 }
 
 func read(conn *net.UDPConn) ([]byte, error) {
@@ -40,14 +49,14 @@ func read(conn *net.UDPConn) ([]byte, error) {
 	}
 }
 
-func store(ch chan []byte) {
+func store(ch chan []byte, cat categorizer.Categorizer) {
 	for {
-		var r = &LogRecord{}
+		var r = &categorizer.LogRecord{}
 		data := <-ch
 		err := json.Unmarshal(data, r)
 		if err != nil {
 			fmt.Println(err)
 		}
-		fmt.Println(r.SimHash())
+		cat.AddRecord(r)
 	}
 }
