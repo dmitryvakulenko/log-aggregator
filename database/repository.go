@@ -9,6 +9,7 @@ import (
 type Repository struct {
 	session       *mgo.Session
 	catCollection *mgo.Collection
+	recCollection *mgo.Collection
 }
 
 func (l *Repository) Connect() {
@@ -18,15 +19,22 @@ func (l *Repository) Connect() {
 		panic(err)
 	}
 	l.catCollection = l.session.DB("").C("log_categories")
+	l.recCollection = l.session.DB("").C("log_records")
 }
 
 func (l *Repository) Disconnect() {
 	l.session.Close()
 }
 
-func (l *Repository) CreateCategory(category *categorizer.Category) {
-	category.Id = bson.NewObjectId()
-	err := l.catCollection.Insert(category)
+func (l *Repository) SaveCategory(category *categorizer.Category) {
+	var err error;
+	if len(category.Id) == 0 {
+		category.Id = bson.NewObjectId()
+		err = l.catCollection.Insert(category)
+	} else {
+		err = l.catCollection.UpdateId(category.Id, category)
+	}
+
 	if err != nil {
 		panic(err)
 	}
@@ -48,5 +56,9 @@ func (l *Repository) GetLogRecords(category *categorizer.Category) []categorizer
 }
 
 func (l *Repository) AddLogRecord(rec *categorizer.LogRecord) {
-
+	rec.Id = bson.NewObjectId()
+	err := l.recCollection.Insert(rec)
+	if err != nil {
+		panic(err)
+	}
 }

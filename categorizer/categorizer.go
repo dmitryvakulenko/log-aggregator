@@ -1,9 +1,12 @@
 package categorizer
 
-import "log-aggregator/simhash"
+import (
+	"log-aggregator/simhash"
+	"time"
+)
 
 type Categorized interface {
-	CreateCategory(*Category)
+	SaveCategory(*Category)
 	GetCategories() []Category
 	GetLogRecords(*Category) []LogRecord
 	AddLogRecord(*LogRecord)
@@ -20,21 +23,23 @@ func (c *Categorizer) AddRecord(rec *LogRecord) {
 	var diff float32 = -1
 	for _, cat := range c.Storage.GetCategories() {
 		newDiff := simhash.Difference(cat.Hash, hash)
-		if diff == -1 {
-			diff = newDiff
-		} else if newDiff < diff {
-			diff = newDiff
-			minCat = &cat
+		if diff < newDiff {
+			continue
 		}
+
+		diff = newDiff
+		minCat = &cat
 	}
 
-	if diff > 0.1 {
-		newCategory := &Category{"", hash}
-		c.Storage.CreateCategory(newCategory)
-		rec.CategoryId = newCategory.Id
+	var resCat *Category = nil
+	if diff == -1 || diff > 0.1 {
+		resCat = &Category{"", time.Now(), hash}
 	} else {
-		rec.CategoryId = minCat.Id
+		resCat = minCat
+		resCat.Updated = time.Now()
 	}
 
+	c.Storage.SaveCategory(resCat)
+	rec.CategoryId = resCat.Id
 	c.Storage.AddLogRecord(rec)
 }
