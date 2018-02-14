@@ -33,7 +33,7 @@ func (c *Categorizer) AddRecord(rec *LogRecord) {
 
 	var resCat *Category = nil
 	if diff == -1 || diff > 0.1 {
-		resCat = &Category{"", time.Now(), hash}
+		resCat = &Category{"", rec.Message, time.Now(), hash}
 	} else {
 		resCat = minCat
 		resCat.Updated = time.Now()

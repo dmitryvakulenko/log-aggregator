@@ -9,6 +9,7 @@ import (
 
 type Category struct {
 	Id      bson.ObjectId `bson:"_id"`
+	Name    string
 	Updated time.Time
 	Hash    simhash.SimHash
 }
