@@ -3,19 +3,20 @@ package categorizer
 import (
 	"github.com/globalsign/mgo/bson"
 	"log-aggregator/simhash"
+	"strconv"
 	"time"
 )
 
 type Category struct {
-	Id   bson.ObjectId `bson:"_id"`
+	Id      bson.ObjectId `bson:"_id"`
 	Updated time.Time
-	Hash simhash.SimHash
+	Hash    simhash.SimHash
 }
 
 type LogRecord struct {
 	Id            bson.ObjectId `bson:"_id"`
 	Type          int           `json:"type"`
-	Timestamp     string        `json:"timestamp"`
+	Timestamp     time.Time     `json:"timestamp"`
 	Message       string        `json:"message"`
 	File          string        `json:"file"`
 	Line          int           `json:"line"`
@@ -33,7 +34,7 @@ type LogRecord struct {
 }
 
 func (r *LogRecord) SimHash() simhash.SimHash {
-	resText := r.Message + "\n" + r.Uri
+	resText := r.Message + "\n" + r.File + "\n" + strconv.Itoa(r.Line)
 	for _, v := range r.Trace {
 		resText += "\n" + v
 	}

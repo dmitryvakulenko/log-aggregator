@@ -20,7 +20,7 @@ type Categorizer struct {
 func (c *Categorizer) AddRecord(rec *LogRecord) {
 	hash := rec.SimHash()
 	var minCat *Category = nil
-	var diff float32 = -1
+	var diff float32 = 2 // 2 оно не может быть по определению
 	for _, cat := range c.Storage.GetCategories() {
 		newDiff := simhash.Difference(cat.Hash, hash)
 		if diff < newDiff {
