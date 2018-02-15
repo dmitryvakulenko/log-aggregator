@@ -4,7 +4,10 @@ import (
 	"github.com/globalsign/mgo"
 	"log-aggregator/categorizer"
 	"github.com/globalsign/mgo/bson"
+	"time"
 )
+
+const subDayDuration = -24 * time.Hour
 
 type Repository struct {
 	session       *mgo.Session
@@ -27,7 +30,7 @@ func (l *Repository) Disconnect() {
 }
 
 func (l *Repository) SaveCategory(category *categorizer.Category) {
-	var err error;
+	var err error
 	if len(category.Id) == 0 {
 		category.Id = bson.NewObjectId()
 		err = l.catCollection.Insert(category)
@@ -42,7 +45,8 @@ func (l *Repository) SaveCategory(category *categorizer.Category) {
 
 func (l *Repository) GetCategories() []categorizer.Category {
 	var tmpRes []categorizer.Category
-	err := l.catCollection.Find(nil).All(&tmpRes)
+	startDate := time.Now().Add(subDayDuration)
+	err := l.catCollection.Find(bson.M{"updated": bson.M{"$gt": startDate}}).All(&tmpRes)
 	if  err != nil {
 		panic(err)
 	}
