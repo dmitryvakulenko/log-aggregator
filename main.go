@@ -3,10 +3,8 @@ package main
 import (
 	"net"
 	"log-aggregator/database"
-	//"log-aggregator/simhash"
 	"log-aggregator/categorizer"
 	"encoding/json"
-	"fmt"
 	"log"
 )
 
