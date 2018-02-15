@@ -10,8 +10,14 @@ import (
 type Category struct {
 	Id      bson.ObjectId `bson:"_id"`
 	Name    string
+	Count	int
 	Updated time.Time
 	Hash    simhash.SimHash
+}
+
+func (c *Category) MarkUpdated() {
+	c.Count++
+	c.Updated = time.Now()
 }
 
 type LogRecord struct {
