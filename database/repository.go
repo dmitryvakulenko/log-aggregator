@@ -5,6 +5,7 @@ import (
 	"log-aggregator/categorizer"
 	"github.com/globalsign/mgo/bson"
 	"time"
+	"log"
 )
 
 const subDayDuration = -24 * time.Hour
@@ -19,7 +20,7 @@ func (l *Repository) Connect() {
 	var err error
 	l.session, err = mgo.Dial("localhost:27017/uts24")
 	if err != nil {
-		panic(err)
+		log.Fatalf("Error database connection %v", err)
 	}
 	l.catCollection = l.session.DB("").C("log_categories")
 	l.recCollection = l.session.DB("").C("log_records")
@@ -39,7 +40,7 @@ func (l *Repository) SaveCategory(category *categorizer.Category) {
 	}
 
 	if err != nil {
-		panic(err)
+		log.Printf("Error saving category %v", err)
 	}
 }
 
@@ -48,21 +49,17 @@ func (l *Repository) GetCategories() []categorizer.Category {
 	startDate := time.Now().Add(subDayDuration)
 	err := l.catCollection.Find(bson.M{"updated": bson.M{"$gt": startDate}}).All(&tmpRes)
 	if  err != nil {
-		panic(err)
+		log.Fatalf("Error getting categories list %v", err)
 	}
 
 	return tmpRes
 }
 
 
-func (l *Repository) GetLogRecords(category *categorizer.Category) []categorizer.LogRecord {
-	return nil
-}
-
 func (l *Repository) AddLogRecord(rec *categorizer.LogRecord) {
 	rec.Id = bson.NewObjectId()
 	err := l.recCollection.Insert(rec)
 	if err != nil {
-		panic(err)
+		log.Printf("Error saving log record %v", err)
 	}
 }

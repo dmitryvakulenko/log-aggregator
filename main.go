@@ -7,18 +7,21 @@ import (
 	"log-aggregator/categorizer"
 	"encoding/json"
 	"fmt"
+	"log"
 )
 
 func main() {
+	log.Print("Starting listening logs...")
 	udpAddr, err := net.ResolveUDPAddr("udp", ":3456")
 	if err != nil {
-		panic(err)
+		log.Fatalf("Error resolving address %v", err)
 	}
+
 	conn, err := net.ListenUDP("udp", udpAddr)
 	defer conn.Close()
 
 	if err != nil {
-		panic(err)
+		log.Fatalf("Error listening port %v", err)
 	}
 
 	repo := database.Repository{}
@@ -55,8 +58,10 @@ func store(ch chan []byte, cat categorizer.Categorizer) {
 		data := <-ch
 		err := json.Unmarshal(data, r)
 		if err != nil {
-			fmt.Println(err)
+			log.Printf("Can't parse message %v", err)
+			continue
 		}
+
 		cat.AddRecord(r)
 	}
 }

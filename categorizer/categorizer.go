@@ -8,7 +8,6 @@ import (
 type Categorized interface {
 	SaveCategory(*Category)
 	GetCategories() []Category
-	GetLogRecords(*Category) []LogRecord
 	AddLogRecord(*LogRecord)
 }
 
